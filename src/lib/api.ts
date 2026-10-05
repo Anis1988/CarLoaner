@@ -21,18 +21,51 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const getData = () => req<Data>('/api/data');
 
-const PASS = 'cl.ownerPass';
-export const ownerPass = {
-  get: () => sessionStorage.getItem(PASS) ?? '',
-  set: (p: string) => sessionStorage.setItem(PASS, p),
-  clear: () => sessionStorage.removeItem(PASS),
+const TOKEN = 'cl.ownerToken';
+/** The owner's session (30 days on this device). The password itself is never stored on the phone. */
+export const session = {
+  get: () => {
+    try {
+      return localStorage.getItem(TOKEN) ?? '';
+    } catch {
+      return '';
+    }
+  },
+  set: (t: string) => {
+    try {
+      localStorage.setItem(TOKEN, t);
+    } catch {
+      /* ignore */
+    }
+  },
+  clear: () => {
+    try {
+      localStorage.removeItem(TOKEN);
+    } catch {
+      /* ignore */
+    }
+  },
 };
 
-const admin = <T>(body: unknown, pass = ownerPass.get()) =>
-  req<T>('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Owner-Password': pass }, body: JSON.stringify(body) });
+export class AuthError extends Error {}
+
+async function admin<T>(body: unknown): Promise<T> {
+  try {
+    return await req<T>('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Owner-Token': session.get() }, body: JSON.stringify(body) });
+  } catch (e) {
+    if (e instanceof Error && /Session expirée/.test(e.message)) {
+      session.clear();
+      throw new AuthError(e.message);
+    }
+    throw e;
+  }
+}
 
 export const adminApi = {
-  login: (pass: string) => admin<{ ok: boolean }>({ action: 'login' }, pass),
+  status: () => admin<{ hasPassword: boolean; setupReady: boolean }>({ action: 'status' }),
+  setup: (code: string, password: string) => admin<{ token: string }>({ action: 'setup', code, password }),
+  login: (password: string) => admin<{ token: string }>({ action: 'login', password }),
+  changePassword: (current: string, password: string) => admin<{ token: string }>({ action: 'changePassword', current, password }),
   saveCar: (car: Partial<Car>) => admin<Data>({ action: 'saveCar', car }),
   deleteCar: (id: string) => admin<Data>({ action: 'deleteCar', id }),
   saveShop: (shop: Shop) => admin<Data>({ action: 'saveShop', shop }),

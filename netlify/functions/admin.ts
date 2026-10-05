@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
-import { checkOwner, json } from '../lib/http';
+import { json, recordFail, sameOrigin, tooManyFails } from '../lib/http';
+import { checkSetupCode, hasPassword, login, passwordProblem, setPassword, setupCode, validToken } from '../lib/auth';
 import { photoStore, readData, writeData } from '../lib/store';
 
 export const config = { path: '/api/admin' };
@@ -34,8 +35,12 @@ const ShopIn = z.object({
   rules: text(2000),
 });
 
+const Pw = z.string().max(200);
 const Body = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('login') }),
+  z.object({ action: z.literal('status') }),
+  z.object({ action: z.literal('setup'), code: Pw, password: Pw }),
+  z.object({ action: z.literal('login'), password: Pw }),
+  z.object({ action: z.literal('changePassword'), current: Pw, password: Pw }),
   z.object({ action: z.literal('saveCar'), car: CarIn }),
   z.object({ action: z.literal('deleteCar'), id: z.string().max(60) }),
   z.object({ action: z.literal('saveShop'), shop: ShopIn }),
@@ -44,11 +49,13 @@ const Body = z.discriminatedUnion('action', [
 
 const photoId = (url: string) => url.match(/id=([\w-]+)/)?.[1];
 
-/** Owner-only changes. Every request needs the owner password (x-owner-password header). */
+/**
+ * Owner area. status / setup / login work without a session; everything else needs the session token
+ * (x-owner-token header) returned by setup or login.
+ */
 export default async (req: Request): Promise<Response> => {
   if (req.method !== 'POST') return json({ error: 'POST only' }, 405);
-  const denied = await checkOwner(req);
-  if (denied) return denied;
+  if (!sameOrigin(req)) return json({ error: 'Origine refusée.' }, 403);
   let body: z.infer<typeof Body>;
   try {
     body = Body.parse(await req.json());
@@ -56,7 +63,42 @@ export default async (req: Request): Promise<Response> => {
     return json({ error: `Données invalides : ${e instanceof Error ? e.message.slice(0, 300) : e}` }, 400);
   }
 
-  if (body.action === 'login') return json({ ok: true });
+  if (body.action === 'status') return json({ hasPassword: await hasPassword(), setupReady: !!setupCode() });
+
+  if (body.action === 'setup' || body.action === 'login' || body.action === 'changePassword') {
+    const blocked = await tooManyFails(req);
+    if (blocked) return blocked;
+  }
+  if (body.action === 'setup') {
+    // First password, or a new one when forgotten: needs the setup code from the person who set up the site.
+    if (!setupCode()) return json({ error: "Le code d'installation n'est pas configuré (OWNER_SETUP_CODE dans Netlify)." }, 503);
+    if (!checkSetupCode(body.code)) {
+      await recordFail(req);
+      return json({ error: "Code d'installation incorrect." }, 401);
+    }
+    const bad = passwordProblem(body.password);
+    if (bad) return json({ error: bad }, 400);
+    return json({ token: await setPassword(body.password) });
+  }
+  if (body.action === 'login') {
+    const t = await login(body.password);
+    if (!t) {
+      await recordFail(req);
+      return json({ error: (await hasPassword()) ? 'Mot de passe incorrect.' : "Aucun mot de passe n'est encore créé." }, 401);
+    }
+    return json({ token: t });
+  }
+  if (!(await validToken(req.headers.get('x-owner-token')))) return json({ error: 'Session expirée. Reconnectez-vous.', relogin: true }, 401);
+
+  if (body.action === 'changePassword') {
+    if (!(await login(body.current))) {
+      await recordFail(req);
+      return json({ error: 'Mot de passe actuel incorrect.' }, 401);
+    }
+    const bad = passwordProblem(body.password);
+    if (bad) return json({ error: bad }, 400);
+    return json({ token: await setPassword(body.password) });
+  }
 
   if (body.action === 'uploadPhoto') {
     const m = body.dataUrl.match(/^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/);

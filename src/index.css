@@ -2,23 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Futuristic, phone-first look: glass cards, emerald/cyan glow, soft grid in dark mode.
+   Every colour has a light and a dark version; animations turn off for people who ask for less motion. */
 @layer base {
-  html { -webkit-tap-highlight-color: transparent; }
-  body { @apply min-h-screen bg-slate-50 font-sans text-slate-800 antialiased; }
+  html { -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
+  body {
+    @apply min-h-screen bg-slate-50 font-sans text-slate-800 antialiased transition-colors duration-300 dark:bg-ink-950 dark:text-slate-100;
+    background-image:
+      radial-gradient(40rem 30rem at 0% -10%, rgba(16, 185, 129, 0.10), transparent 60%),
+      radial-gradient(40rem 30rem at 100% 0%, rgba(34, 211, 238, 0.10), transparent 60%);
+    background-attachment: fixed;
+  }
+  .dark body {
+    background-image:
+      radial-gradient(45rem 35rem at 0% -10%, rgba(16, 185, 129, 0.16), transparent 60%),
+      radial-gradient(45rem 35rem at 100% 0%, rgba(34, 211, 238, 0.12), transparent 60%),
+      linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+    background-size: auto, auto, 36px 36px, 36px 36px;
+  }
   [dir='rtl'] body { font-family: 'Noto Sans Arabic', Inter, system-ui, sans-serif; }
-  h1, h2, h3 { @apply font-display; }
+  h1, h2, h3 { @apply font-display tracking-tight; }
+  ::selection { background: rgba(16, 185, 129, 0.3); }
 }
 
 @layer components {
-  .card { @apply rounded-2xl border border-slate-200 bg-white shadow-sm; }
-  .btn { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 active:scale-95 disabled:opacity-50; }
-  .btn-primary { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-95 disabled:opacity-50; }
-  .btn-wa { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-95 active:scale-95; }
-  .btn-danger { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 active:scale-95; }
-  .input { @apply min-h-[44px] w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2 text-base text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20; }
-  .label { @apply mb-1 block text-sm font-medium text-slate-600; }
-  .chip { @apply inline-flex min-h-[38px] items-center rounded-full border px-3 py-1 text-sm font-medium transition; }
+  .glass { @apply border border-slate-200/80 bg-white/75 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.04]; }
+  .card { @apply glass rounded-3xl shadow-soft dark:shadow-none; }
+  .muted { @apply text-slate-500 dark:text-slate-400; }
+  .btn { @apply inline-flex min-h-[46px] items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition duration-200 hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-soft active:translate-y-0 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 dark:border-white/15 dark:bg-white/5 dark:text-slate-100 dark:hover:border-brand-400/60; }
+  .btn-primary { @apply inline-flex min-h-[46px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow-glow transition duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50; }
+  .btn-wa { @apply inline-flex min-h-[46px] items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_30px_-10px_rgba(37,211,102,.6)] transition duration-200 hover:-translate-y-0.5 hover:brightness-105 active:scale-[0.97]; }
+  .btn-danger { @apply inline-flex min-h-[46px] items-center justify-center gap-2 rounded-2xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 active:scale-[0.97] dark:border-red-400/30 dark:bg-red-500/10 dark:text-red-300; }
+  .icon-btn { @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white/80 text-slate-700 transition hover:border-brand-400 hover:text-brand-600 active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:text-brand-300; }
+  .input { @apply min-h-[48px] w-full min-w-0 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-base text-slate-800 placeholder:text-slate-400 transition focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/15 dark:border-white/15 dark:bg-ink-900 dark:text-slate-100 dark:placeholder:text-slate-500; }
+  .label { @apply mb-1.5 block text-sm font-medium text-slate-600 dark:text-slate-300; }
+  .chip { @apply inline-flex min-h-[42px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-sm font-semibold transition duration-200 active:scale-95; }
+  .chip-off { @apply border-slate-300 bg-white/80 text-slate-700 hover:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-200; }
+  .chip-on { @apply border-transparent bg-gradient-to-r from-brand-500 to-cyan-500 text-white shadow-glow; }
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 }
 
+/* motion */
+@keyframes rise { from { opacity: 0; transform: translateY(18px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes sheet { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes pop { from { opacity: 0; transform: translateY(24px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse-dot { 0%, 100% { box-shadow: 0 0 0 0 currentColor; } 50% { box-shadow: 0 0 0 5px transparent; } }
+@keyframes shine { from { transform: translateX(-120%) skewX(-20deg); } to { transform: translateX(220%) skewX(-20deg); } }
+.rise { animation: rise 0.55s cubic-bezier(.2,.8,.2,1) both; }
+.fade { animation: fade 0.25s ease-out both; }
+.sheet { animation: sheet 0.38s cubic-bezier(.2,.8,.2,1) both; }
+@media (min-width: 768px) { .sheet { animation-name: pop; } }
+.live-dot { animation: pulse-dot 1.8s ease-in-out infinite; }
+.shine { position: relative; overflow: hidden; }
+.shine::after { content: ''; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); transform: translateX(-120%) skewX(-20deg); pointer-events: none; }
+.shine:hover::after { animation: shine 0.9s ease; }
 .spinner { width: 1em; height: 1em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .rise, .fade, .sheet, .live-dot, .shine:hover::after, .spinner { animation: none !important; }
+}
