@@ -163,7 +163,7 @@ export function CarSheet({ car, shop, onClose, leaving = false }: { car: Car; sh
 
         {full !== null && <Lightbox photos={car.photos} alt={`${car.name} ${car.year}`} start={full} onClose={() => setFull(null)} />}
         <div className="grid grid-cols-2 gap-2 border-t border-slate-200 bg-white/90 p-3 backdrop-blur dark:border-white/10 dark:bg-ink-900/90" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
-          {shop.phone ? <a className="btn-primary" href={`tel:${shop.phone.replace(/\s/g, '')}`}><Ic.Phone /> {t.call}</a> : <span />}
+          {shop.phone ? <a className="btn-primary whitespace-nowrap !px-3" href={`tel:${shop.phone.replace(/\s/g, '')}`} aria-label={`${t.call} ${shop.phone}`}><Ic.Phone className="h-5 w-5 shrink-0" /> <bdi dir="ltr">{shop.phone}</bdi></a> : <span />}
           {wa ? <a className="btn-wa" href={wa} target="_blank" rel="noopener noreferrer"><Ic.Chat /> {t.whatsapp}</a> : <span />}
         </div>
       </div>
