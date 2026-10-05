@@ -24,8 +24,13 @@ const CarIn = z.object({
   availableFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   conditions: text(2000),
   issues: text(2000),
+  conditionsAr: z.string().max(2000).optional(),
+  issuesAr: z.string().max(2000).optional(),
   photos: z.array(z.string().regex(/^\/(cars\/[\w-]+\.svg|api\/photo\?id=[\w-]+)$/)).max(10),
 });
+/** Optional https link (empty allowed). */
+const link = z.union([z.literal(''), z.string().trim().max(500).regex(/^https:\/\/[^\s<>"]+$/, 'Le lien doit commencer par https://')]).optional();
+
 const ShopIn = z.object({
   name: z.string().trim().min(1).max(80),
   city: text(60),
@@ -34,6 +39,20 @@ const ShopIn = z.object({
   whatsapp: z.string().regex(/^\d{0,15}$/).default(''),
   hours: text(200),
   rules: text(2000),
+  nameAr: z.string().max(80).optional(),
+  cityAr: z.string().max(60).optional(),
+  addressAr: z.string().max(200).optional(),
+  hoursAr: z.string().max(200).optional(),
+  rulesAr: z.string().max(2000).optional(),
+  heroTitle: z.string().max(120).optional(),
+  heroTitleAr: z.string().max(120).optional(),
+  heroSub: z.string().max(400).optional(),
+  heroSubAr: z.string().max(400).optional(),
+  logo: z.string().regex(/^\/api\/photo\?id=[\w-]+$/).optional(),
+  mapsUrl: link,
+  email: z.union([z.literal(''), z.string().trim().email().max(120)]).optional(),
+  facebook: link,
+  instagram: link,
 });
 
 const Pw = z.string().max(200);
@@ -104,18 +123,21 @@ export default async (req: Request): Promise<Response> => {
   }
 
   if (body.action === 'uploadPhoto') {
-    const m = body.dataUrl.match(/^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/);
-    if (!m) return json({ error: 'Photo JPEG attendue.' }, 400);
-    const bytes = Buffer.from(m[1], 'base64');
+    const m = body.dataUrl.match(/^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
+    if (!m) return json({ error: 'Image JPEG ou PNG attendue.' }, 400);
+    const bytes = Buffer.from(m[2], 'base64');
     if (bytes.length > 4_000_000) return json({ error: 'Photo trop grande.' }, 413);
     const id = randomBytes(9).toString('base64url');
-    await photoStore().set(id, new Uint8Array(bytes).buffer);
+    await photoStore().set(id, new Uint8Array(bytes).buffer, { metadata: { type: `image/${m[1]}` } });
     return json({ url: `/api/photo?id=${id}` });
   }
 
   const { sample, ...data } = await readData();
   void sample;
   if (body.action === 'saveShop') {
+    // A replaced logo is deleted from storage.
+    const oldLogo = data.shop.logo && photoId(data.shop.logo);
+    if (oldLogo && data.shop.logo !== body.shop.logo) await photoStore().delete(oldLogo);
     data.shop = body.shop;
   } else if (body.action === 'saveCar') {
     const c = body.car;

@@ -53,6 +53,9 @@ const fr = {
   photoOf: (n: number, t: number) => `Photo ${n} sur ${t}`,
   owner: 'Propriétaire',
   admin: 'Admin',
+  directions: 'Itinéraire',
+  emailLabel: 'E-mail',
+  follow: 'Suivez-nous',
   nextPhoto: 'Photo suivante',
   prevPhoto: 'Photo précédente',
   fullscreen: 'agrandir',
@@ -130,6 +133,9 @@ const ar: Dict = {
   photoOf: (n, t) => `الصورة ${n} من ${t}`,
   owner: 'المالك',
   admin: 'الإدارة',
+  directions: 'الاتجاهات',
+  emailLabel: 'البريد الإلكتروني',
+  follow: 'تابعونا',
   nextPhoto: 'الصورة التالية',
   prevPhoto: 'الصورة السابقة',
   fullscreen: 'تكبير',
@@ -200,3 +206,6 @@ export const money = (n: number, lang: Lang) => {
 
 export const dateText = (iso: string, lang: Lang) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+/** The owner's own text in the visitor's language: the Arabic version for Arabic visitors when filled in, otherwise the French one. */
+export const pick = (fr: string | undefined, ar: string | undefined, lang: Lang) => (lang === 'ar' && ar?.trim() ? ar : fr ?? '');

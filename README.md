@@ -8,6 +8,12 @@ Only the owner can add, edit or remove cars, change availability, upload photos 
 They open it with the 🔑 button (or `/admin`) and choose **their own password**: only a scrambled (scrypt) version is
 stored, so nobody else can read it. Light and dark mode, phone-first design.
 
+The owner manages everything from the admin page, with no developer needed:
+- **Agence**: name, city, phone, WhatsApp, address, opening hours and rules.
+- **Mon site**: logo, banner title and text, Google Maps link (shown as an "Itinéraire" button), e-mail, Facebook and Instagram.
+
+Every text has an optional Arabic version. When it is left empty, Arabic visitors see the French text.
+
 ## Put it online (Netlify)
 
 1. Netlify → Add new site → Import from GitHub → this repository (build settings are in `netlify.toml`).

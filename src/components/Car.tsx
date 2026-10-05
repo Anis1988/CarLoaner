@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Gallery, Lightbox } from './Gallery';
 import type { Car, Shop } from '../lib/types';
-import { dateText, money, useLang } from '../lib/i18n';
+import { dateText, money, pick, useLang } from '../lib/i18n';
 import * as Ic from './Icons';
 
 /** An amount that stays "4 500 دج" in Arabic (the number is isolated as left-to-right, so it never reads "500 4"). */
@@ -91,10 +91,11 @@ const lines = (s: string) => s.split('\n').map((x) => x.trim()).filter(Boolean);
 
 /** Car details as a sheet: slides up from the bottom on phones, a centred panel on bigger screens. */
 export function CarSheet({ car, shop, onClose, leaving = false }: { car: Car; shop: Shop; onClose: () => void; leaving?: boolean }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const conditions = lines(pick(car.conditions, car.conditionsAr, lang));
   const [full, setFull] = useState<number | null>(null); // full-screen photo viewer
   const wa = shop.whatsapp ? `https://wa.me/${shop.whatsapp}?text=${encodeURIComponent(t.waMessage(`${car.name} ${car.year}`))}` : '';
-  const issues = lines(car.issues);
+  const issues = lines(pick(car.issues, car.issuesAr, lang));
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -145,11 +146,11 @@ export function CarSheet({ car, shop, onClose, leaving = false }: { car: Car; sh
                 <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-brand-800 dark:text-brand-200"><Ic.Cash className="h-4 w-4" /> {t.cash}</p>
               </div>
 
-              {lines(car.conditions).length > 0 && (
+              {conditions.length > 0 && (
                 <div>
                   <h3 className="mb-2 font-semibold text-slate-900 dark:text-white">{t.conditions}</h3>
                   <ul className="space-y-1.5 text-sm text-slate-700 dark:text-slate-300">
-                    {lines(car.conditions).map((c) => <li key={c} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />{c}</li>)}
+                    {conditions.map((c) => <li key={c} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />{c}</li>)}
                   </ul>
                 </div>
               )}

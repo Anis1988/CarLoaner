@@ -6,7 +6,8 @@ export const config = { path: '/api/photo' };
 export default async (req: Request): Promise<Response> => {
   const id = new URL(req.url).searchParams.get('id') ?? '';
   if (!/^[\w-]{6,40}$/.test(id)) return new Response('Bad id', { status: 400 });
-  const data = await photoStore().get(id, { type: 'arrayBuffer' });
-  if (!data) return new Response('Not found', { status: 404 });
-  return new Response(data, { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=31536000, immutable' } });
+  const got = await photoStore().getWithMetadata(id, { type: 'arrayBuffer' });
+  if (!got) return new Response('Not found', { status: 404 });
+  const type = got.metadata?.type === 'image/png' ? 'image/png' : 'image/jpeg';
+  return new Response(got.data, { headers: { 'Content-Type': type, 'Cache-Control': 'public, max-age=31536000, immutable' } });
 };

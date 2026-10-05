@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AuthError, adminApi, getData, session, shrinkPhoto, type Data } from '../lib/api';
+import { AuthError, adminApi, getData, session, shrinkLogo, shrinkPhoto, type Data } from '../lib/api';
 import * as Ic from '../components/Icons';
 import type { Car, Shop } from '../lib/types';
 import { Money } from '../components/Car';
@@ -210,12 +210,8 @@ function CarForm({ initial, onSaved, onCancel }: { initial: Draft; onSaved: (d: 
         )}
       </div>
 
-      <label className="block"><span className="label">Conditions (une par ligne)</span>
-        <textarea className="input min-h-[96px]" placeholder={'Kilométrage limité à 300 km/jour\nRendre avec le plein'} value={c.conditions} onChange={(e) => set('conditions', e.target.value)} />
-      </label>
-      <label className="block"><span className="label">Défauts ou limites à connaître (une par ligne)</span>
-        <textarea className="input min-h-[80px]" placeholder="Petite rayure sur la porte arrière" value={c.issues} onChange={(e) => set('issues', e.target.value)} />
-      </label>
+      <Bi label="Conditions (une par ligne)" area fr={c.conditions} ar={c.conditionsAr ?? ''} onFr={(v) => set('conditions', v)} onAr={(v) => set('conditionsAr', v)} placeholder={'Kilométrage limité à 300 km/jour\nRendre avec le plein'} />
+      <Bi label="Défauts ou limites à connaître (une par ligne)" area fr={c.issues} ar={c.issuesAr ?? ''} onFr={(v) => set('issues', v)} onAr={(v) => set('issuesAr', v)} placeholder="Petite rayure sur la porte arrière" />
 
       <div className="space-y-2">
         <span className="label">Photos (la première est la photo principale)</span>
@@ -247,39 +243,140 @@ function CarForm({ initial, onSaved, onCancel }: { initial: Draft; onSaved: (d: 
   );
 }
 
-function ShopForm({ shop, onSaved }: { shop: Shop; onSaved: (d: Data) => void }) {
-  const [s, setS] = useState(shop);
+/** A text in French with an optional Arabic version next to it (side by side on bigger screens). */
+function Bi({ label, fr, ar, onFr, onAr, area = false, placeholder }: { label: string; fr: string; ar: string; onFr: (v: string) => void; onAr: (v: string) => void; area?: boolean; placeholder?: string }) {
+  const cls = `input ${area ? 'min-h-[110px]' : ''}`;
+  return (
+    <div className="space-y-1.5">
+      <span className="label !mb-0">{label}</span>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {area ? <textarea className={cls} value={fr} placeholder={placeholder} onChange={(e) => onFr(e.target.value)} aria-label={`${label} (français)`} /> : <input className={cls} value={fr} placeholder={placeholder} onChange={(e) => onFr(e.target.value)} aria-label={`${label} (français)`} />}
+        {area ? <textarea className={cls} dir="rtl" lang="ar" value={ar} placeholder="بالعربية (اختياري)" onChange={(e) => onAr(e.target.value)} aria-label={`${label} (arabe)`} /> : <input className={cls} dir="rtl" lang="ar" value={ar} placeholder="بالعربية (اختياري)" onChange={(e) => onAr(e.target.value)} aria-label={`${label} (arabe)`} />}
+      </div>
+    </div>
+  );
+}
+
+/** Saves only the fields this form owns, on top of the latest saved agency info (so two forms never undo each other). */
+function useShopForm<K extends keyof Shop>(shop: Shop, keys: K[], onSaved: (d: Data) => void, clean: (s: Shop) => Shop = (x) => x) {
+  const [s, setS] = useState<Shop>(shop);
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState('');
-  const set = <K extends keyof Shop>(k: K, v: Shop[K]) => setS((x) => ({ ...x, [k]: v }));
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const set = <F extends keyof Shop>(k: F, v: Shop[F]) => setS((x) => ({ ...x, [k]: v }));
   const save = async () => {
     setBusy(true);
-    setMsg('');
+    setMsg(null);
     try {
-      onSaved(await adminApi.saveShop({ ...s, whatsapp: s.whatsapp.replace(/\D/g, '') }));
-      setMsg('Enregistré.');
+      const mine = Object.fromEntries(keys.map((k) => [k, s[k]])) as Pick<Shop, K>;
+      onSaved(await adminApi.saveShop(clean({ ...shop, ...mine })));
+      setMsg({ ok: true, text: 'Enregistré ✓ Le site est à jour.' });
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e));
+      setMsg({ ok: false, text: e instanceof Error ? e.message : String(e) });
     } finally {
       setBusy(false);
     }
   };
+  return { s, set, save, busy, msg };
+}
+
+function SaveBar({ busy, msg, onSave }: { busy: boolean; msg: { ok: boolean; text: string } | null; onSave: () => void }) {
   return (
-    <section className="card rise space-y-3 p-4 sm:p-6">
-      <h2 className="text-xl font-bold text-slate-900 dark:text-white">Infos de l'agence</h2>
+    <div className="space-y-2">
+      {msg && (msg.ok ? <p className="rounded-2xl bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 ring-1 ring-emerald-500/30 dark:text-emerald-300">{msg.text}</p> : <Err msg={msg.text} />)}
+      <button className="btn-primary w-full sm:w-auto" disabled={busy} onClick={onSave}>{busy ? <span className="spinner" /> : 'Enregistrer'}</button>
+    </div>
+  );
+}
+
+function ShopForm({ shop, onSaved }: { shop: Shop; onSaved: (d: Data) => void }) {
+  const { s, set, save, busy, msg } = useShopForm(shop, ['name', 'nameAr', 'city', 'cityAr', 'phone', 'whatsapp', 'address', 'addressAr', 'hours', 'hoursAr', 'rules', 'rulesAr'], onSaved, (x) => ({ ...x, whatsapp: x.whatsapp.replace(/\D/g, '') }));
+  return (
+    <section className="card rise space-y-4 p-4 sm:p-6">
+      <div>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Infos de l'agence</h2>
+        <p className="text-sm muted">Le texte en arabe est facultatif : s'il est vide, les visiteurs en arabe voient le français.</p>
+      </div>
+      <Bi label="Nom de l'agence" fr={s.name} ar={s.nameAr ?? ''} onFr={(v) => set('name', v)} onAr={(v) => set('nameAr', v)} />
+      <Bi label="Ville" fr={s.city} ar={s.cityAr ?? ''} onFr={(v) => set('city', v)} onAr={(v) => set('cityAr', v)} />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label><span className="label">Nom de l'agence</span><input className="input" value={s.name} onChange={(e) => set('name', e.target.value)} /></label>
-        <label><span className="label">Ville</span><input className="input" value={s.city} onChange={(e) => set('city', e.target.value)} /></label>
         <label><span className="label">Téléphone</span><input className="input" inputMode="tel" value={s.phone} onChange={(e) => set('phone', e.target.value)} /></label>
         <label><span className="label">WhatsApp (avec 213, sans le 0 ni +)</span><input className="input" inputMode="tel" placeholder="213555123456" value={s.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} /></label>
-        <label className="sm:col-span-2"><span className="label">Adresse</span><input className="input" value={s.address} onChange={(e) => set('address', e.target.value)} /></label>
-        <label className="sm:col-span-2"><span className="label">Horaires</span><input className="input" value={s.hours} onChange={(e) => set('hours', e.target.value)} /></label>
       </div>
-      <label className="block"><span className="label">Conditions générales (une par ligne)</span><textarea className="input min-h-[110px]" value={s.rules} onChange={(e) => set('rules', e.target.value)} /></label>
-      <div className="flex items-center gap-3">
-        <button className="btn-primary" disabled={busy} onClick={() => void save()}>{busy ? <span className="spinner" /> : 'Enregistrer'}</button>
-        {msg && <span className="text-sm muted">{msg}</span>}
+      <Bi label="Adresse" fr={s.address} ar={s.addressAr ?? ''} onFr={(v) => set('address', v)} onAr={(v) => set('addressAr', v)} />
+      <Bi label="Horaires" fr={s.hours} ar={s.hoursAr ?? ''} onFr={(v) => set('hours', v)} onAr={(v) => set('hoursAr', v)} />
+      <Bi label="Conditions générales (une par ligne)" area fr={s.rules} ar={s.rulesAr ?? ''} onFr={(v) => set('rules', v)} onAr={(v) => set('rulesAr', v)} />
+      <SaveBar busy={busy} msg={msg} onSave={() => void save()} />
+    </section>
+  );
+}
+
+/** "@name" or "name" -> a full link; full links are kept. */
+const social = (v: string | undefined, base: string) => {
+  const x = (v ?? '').trim();
+  if (!x) return '';
+  if (/^https:\/\//i.test(x)) return x;
+  if (/^http:\/\//i.test(x)) return x.replace(/^http:/i, 'https:');
+  if (/^(www\.)?(facebook|instagram|fb)\.com/i.test(x)) return `https://${x}`;
+  return `${base}${x.replace(/^@/, '')}`;
+};
+
+/** The owner's own site: banner text, logo, map link, email and social pages. */
+function SiteForm({ shop, onSaved, onAuth }: { shop: Shop; onSaved: (d: Data) => void; onAuth: () => void }) {
+  const { s, set, save, busy, msg } = useShopForm(shop, ['heroTitle', 'heroTitleAr', 'heroSub', 'heroSubAr', 'logo', 'mapsUrl', 'email', 'facebook', 'instagram'], onSaved, (x) => ({
+    ...x,
+    mapsUrl: x.mapsUrl?.trim() ? social(x.mapsUrl, 'https://') : '',
+    email: x.email?.trim() ?? '',
+    facebook: social(x.facebook, 'https://facebook.com/'),
+    instagram: social(x.instagram, 'https://instagram.com/'),
+  }));
+  const [up, setUp] = useState(false);
+  const [err, setErr] = useState('');
+  const uploadLogo = async (f: File | undefined) => {
+    if (!f) return;
+    setUp(true);
+    setErr('');
+    try {
+      set('logo', (await adminApi.uploadPhoto(await shrinkLogo(f))).url);
+    } catch (e) {
+      if (e instanceof AuthError) return onAuth();
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setUp(false);
+    }
+  };
+  return (
+    <section className="card rise space-y-4 p-4 sm:p-6">
+      <div>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Mon site</h2>
+        <p className="text-sm muted">Tout est facultatif. Laissez vide pour garder le texte par défaut.</p>
       </div>
+
+      <div className="space-y-1.5">
+        <span className="label !mb-0">Logo</span>
+        <div className="flex items-center gap-3">
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200 dark:ring-white/10">
+            {s.logo ? <img src={s.logo} alt="Logo" className="h-full w-full object-contain" /> : <Ic.Image className="h-7 w-7 text-slate-400" />}
+          </span>
+          <label className="btn cursor-pointer">{up ? <span className="spinner" /> : s.logo ? 'Changer' : 'Ajouter un logo'}<input type="file" accept="image/*" className="hidden" onChange={(e) => void uploadLogo(e.target.files?.[0])} /></label>
+          {s.logo && <button className="btn-danger" onClick={() => set('logo', undefined)}>Retirer</button>}
+        </div>
+        <Err msg={err} />
+      </div>
+
+      <Bi label="Titre du bandeau" fr={s.heroTitle ?? ''} ar={s.heroTitleAr ?? ''} onFr={(v) => set('heroTitle', v)} onAr={(v) => set('heroTitleAr', v)} placeholder="Louez une voiture en toute simplicité" />
+      <Bi label="Texte du bandeau" area fr={s.heroSub ?? ''} ar={s.heroSubAr ?? ''} onFr={(v) => set('heroSub', v)} onAr={(v) => set('heroSubAr', v)} placeholder="Consultez les voitures disponibles, les prix et les conditions…" />
+
+      <label className="block">
+        <span className="label">Lien Google Maps de l'agence</span>
+        <input className="input" inputMode="url" placeholder="https://maps.app.goo.gl/…" value={s.mapsUrl ?? ''} onChange={(e) => set('mapsUrl', e.target.value)} />
+        <span className="mt-1 block text-xs muted">Dans Google Maps : cherchez votre agence → Partager → Copier le lien → collez ici. Les clients verront un bouton « Itinéraire ».</span>
+      </label>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <label><span className="label">E-mail</span><input className="input" type="email" inputMode="email" placeholder="contact@…" value={s.email ?? ''} onChange={(e) => set('email', e.target.value)} /></label>
+        <label><span className="label">Facebook (lien ou nom)</span><input className="input" placeholder="facebook.com/…" value={s.facebook ?? ''} onChange={(e) => set('facebook', e.target.value)} /></label>
+        <label><span className="label">Instagram (lien ou @nom)</span><input className="input" placeholder="@monagence" value={s.instagram ?? ''} onChange={(e) => set('instagram', e.target.value)} /></label>
+      </div>
+      <SaveBar busy={busy} msg={msg} onSave={() => void save()} />
     </section>
   );
 }
@@ -320,7 +417,7 @@ export function Admin() {
   const [logged, setLogged] = useState(!!session.get());
   const [data, setData] = useState<Data | null>(null);
   const [edit, setEdit] = useState<Draft | null>(null);
-  const [tab, setTab] = useState<'cars' | 'shop' | 'security'>('cars');
+  const [tab, setTab] = useState<'cars' | 'shop' | 'site' | 'security'>('cars');
   const [err, setErr] = useState('');
 
   useEffect(() => {
@@ -381,11 +478,14 @@ export function Admin() {
       <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
         <button className={tabCls(tab === 'cars')} onClick={() => (setTab('cars'), setEdit(null))}><Ic.Car className="h-4 w-4" /> Voitures ({data.cars.length})</button>
         <button className={tabCls(tab === 'shop')} onClick={() => setTab('shop')}><Ic.Info className="h-4 w-4" /> Agence</button>
+        <button className={tabCls(tab === 'site')} onClick={() => setTab('site')}><Ic.Image className="h-4 w-4" /> Mon site</button>
         <button className={tabCls(tab === 'security')} onClick={() => setTab('security')}><Ic.Shield className="h-4 w-4" /> Mot de passe</button>
       </div>
 
       {tab === 'security' ? (
         <PasswordForm />
+      ) : tab === 'site' ? (
+        <SiteForm shop={data.shop} onSaved={setData} onAuth={() => setLogged(false)} />
       ) : tab === 'shop' ? (
         <>
           <ShopForm shop={data.shop} onSaved={setData} />

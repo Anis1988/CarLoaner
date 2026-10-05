@@ -91,3 +91,17 @@ export async function shrinkPhoto(file: File): Promise<string> {
   img.close();
   return canvas.toDataURL('image/jpeg', 0.88);
 }
+
+/** Prepares a logo: at most 512 px, PNG so a transparent background stays transparent. */
+export async function shrinkLogo(file: File): Promise<string> {
+  const img = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const scale = Math.min(1, 512 / Math.max(img.width, img.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.width * scale);
+  canvas.height = Math.round(img.height * scale);
+  const ctx = canvas.getContext('2d')!;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  img.close();
+  return canvas.toDataURL('image/png');
+}
