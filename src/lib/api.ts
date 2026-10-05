@@ -70,15 +70,24 @@ export const adminApi = {
   deleteCar: (id: string) => admin<Data>({ action: 'deleteCar', id }),
   saveShop: (shop: Shop) => admin<Data>({ action: 'saveShop', shop }),
   uploadPhoto: (dataUrl: string) => admin<{ url: string }>({ action: 'uploadPhoto', dataUrl }),
+  addSamples: () => admin<Data>({ action: 'addSamples' }),
+  removeSamples: () => admin<Data>({ action: 'removeSamples' }),
 };
 
-/** Shrinks a phone photo to max 1280 px JPEG (about 150-300 KB) before uploading. */
+/**
+ * Prepares a phone photo for upload: turned the right way up (phones store sideways photos with a "rotate" tag),
+ * at most 1600 px on the long side, good-quality JPEG (about 300-600 KB).
+ */
 export async function shrinkPhoto(file: File): Promise<string> {
-  const img = await createImageBitmap(file);
-  const scale = Math.min(1, 1280 / Math.max(img.width, img.height));
+  const img = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(img.width * scale);
   canvas.height = Math.round(img.height * scale);
-  canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL('image/jpeg', 0.82);
+  const ctx = canvas.getContext('2d')!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  img.close();
+  return canvas.toDataURL('image/jpeg', 0.88);
 }

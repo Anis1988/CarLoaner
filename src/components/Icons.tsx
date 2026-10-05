@@ -25,4 +25,5 @@ export const Clock = (p: P) => <I {...p}><circle cx="12" cy="12" r="9" /><path d
 export const Back = (p: P) => <I {...p}><path d="M15 6l-6 6 6 6" /></I>;
 export const Plus = (p: P) => <I {...p}><path d="M12 5v14M5 12h14" /></I>;
 export const Search = (p: P) => <I {...p}><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></I>;
+export const Expand = (p: P) => <I {...p}><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></I>;
 export const Sort = (p: P) => <I {...p}><path d="M7 4v16M4 17l3 3 3-3M14 6h7M14 12h5M14 18h3" /></I>;

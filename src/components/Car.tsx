@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Gallery, Lightbox } from './Gallery';
 import type { Car, Shop } from '../lib/types';
 import { dateText, money, useLang } from '../lib/i18n';
 import * as Ic from './Icons';
@@ -58,7 +59,12 @@ export function CarCard({ car, index, onOpen }: { car: Car; index: number; onOpe
         aria-label={`${t.details}: ${car.name} ${car.year}`}
       >
         <div className="relative aspect-[16/11] overflow-hidden bg-slate-100 dark:bg-ink-800">
-          {car.photos[0] && <img src={car.photos[0]} alt="" loading="lazy" className={`h-full w-full object-cover transition duration-500 group-hover:scale-105 ${off ? 'grayscale-[45%]' : ''}`} />}
+          {car.photos[0] && (
+            <>
+              <img src={car.photos[0]} alt="" aria-hidden="true" loading="lazy" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-xl" />
+              <img src={car.photos[0]} alt="" loading="lazy" decoding="async" className={`relative h-full w-full object-contain transition duration-500 group-hover:scale-105 ${off ? 'grayscale-[45%]' : ''}`} />
+            </>
+          )}
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/45 to-transparent" />
           <span className="absolute start-3 top-3"><StatusBadge car={car} solid /></span>
           <span className="absolute bottom-3 end-3 rounded-2xl bg-white/90 px-3 py-1.5 text-end shadow-soft backdrop-blur dark:bg-ink-900/85">
@@ -86,33 +92,20 @@ const lines = (s: string) => s.split('\n').map((x) => x.trim()).filter(Boolean);
 /** Car details as a sheet: slides up from the bottom on phones, a centred panel on bigger screens. */
 export function CarSheet({ car, shop, onClose, leaving = false }: { car: Car; shop: Shop; onClose: () => void; leaving?: boolean }) {
   const { t } = useLang();
-  const [i, setI] = useState(0);
-  const strip = useRef<HTMLDivElement>(null);
+  const [full, setFull] = useState<number | null>(null); // full-screen photo viewer
   const wa = shop.whatsapp ? `https://wa.me/${shop.whatsapp}?text=${encodeURIComponent(t.waMessage(`${car.name} ${car.year}`))}` : '';
   const issues = lines(car.issues);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && !document.querySelector('[data-lightbox]') && onClose();
     window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener('keydown', onKey);
     };
   }, [onClose]);
-
-  // Swipe gallery: follow which photo is in view.
-  const onScroll = () => {
-    const el = strip.current;
-    if (el) setI(Math.round(Math.abs(el.scrollLeft) / el.clientWidth));
-  };
-  const goTo = (n: number) => {
-    const el = strip.current;
-    if (!el) return;
-    const dir = getComputedStyle(el).direction === 'rtl' ? -1 : 1;
-    el.scrollTo({ left: dir * n * el.clientWidth, behavior: 'smooth' });
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6" role="dialog" aria-modal="true" aria-label={car.name}>
@@ -123,21 +116,8 @@ export function CarSheet({ car, shop, onClose, leaving = false }: { car: Car; sh
 
         <div className="overflow-y-auto overscroll-contain">
           <div className="md:grid md:grid-cols-[1.15fr_1fr]">
-            <div className="relative bg-slate-100 dark:bg-ink-800">
-              <div ref={strip} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto">
-                {car.photos.map((p, n) => (
-                  <div key={p} className="w-full shrink-0 snap-center overflow-hidden">
-                    <img src={p} alt={t.photoOf(n + 1, car.photos.length)} className={`aspect-[4/3] w-full object-cover md:aspect-auto md:h-full md:min-h-[420px] ${n === 0 ? 'zoom-in' : ''}`} />
-                  </div>
-                ))}
-              </div>
-              {car.photos.length > 1 && (
-                <div className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
-                  {car.photos.map((p, n) => (
-                    <button key={p} onClick={() => goTo(n)} aria-label={t.photoOf(n + 1, car.photos.length)} className={`h-2 rounded-full transition-all ${n === i ? 'w-6 bg-white' : 'w-2 bg-white/60'}`} />
-                  ))}
-                </div>
-              )}
+            <div className="bg-slate-100 dark:bg-ink-800 md:self-start">
+              <Gallery photos={car.photos} alt={`${car.name} ${car.year}`} keys={full === null} onOpenFull={setFull} />
             </div>
 
             <div className="space-y-4 p-5">
@@ -181,6 +161,7 @@ export function CarSheet({ car, shop, onClose, leaving = false }: { car: Car; sh
           </div>
         </div>
 
+        {full !== null && <Lightbox photos={car.photos} alt={`${car.name} ${car.year}`} start={full} onClose={() => setFull(null)} />}
         <div className="grid grid-cols-2 gap-2 border-t border-slate-200 bg-white/90 p-3 backdrop-blur dark:border-white/10 dark:bg-ink-900/90" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
           {shop.phone ? <a className="btn-primary" href={`tel:${shop.phone.replace(/\s/g, '')}`}><Ic.Phone /> {t.call}</a> : <span />}
           {wa ? <a className="btn-wa" href={wa} target="_blank" rel="noopener noreferrer"><Ic.Chat /> {t.whatsapp}</a> : <span />}

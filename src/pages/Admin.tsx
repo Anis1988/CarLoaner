@@ -284,6 +284,38 @@ function ShopForm({ shop, onSaved }: { shop: Shop; onSaved: (d: Data) => void })
   );
 }
 
+/** Example cars: add them to try the site, remove them before going live. The owner's own cars are never touched. */
+function SampleCars({ onDone, onAuth }: { onDone: (d: Data) => void; onAuth: () => void }) {
+  const [busy, setBusy] = useState('');
+  const [msg, setMsg] = useState('');
+  const run = async (what: 'add' | 'remove') => {
+    if (what === 'remove' && !window.confirm("Retirer toutes les voitures d'exemple ? Vos propres voitures (et celles où vous avez ajouté vos photos) restent.")) return;
+    setBusy(what);
+    setMsg('');
+    try {
+      const d = await (what === 'add' ? adminApi.addSamples() : adminApi.removeSamples());
+      onDone(d);
+      setMsg(`${d.cars.length} voiture${d.cars.length > 1 ? 's' : ''} sur le site.`);
+    } catch (e) {
+      if (e instanceof AuthError) return onAuth();
+      setMsg(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy('');
+    }
+  };
+  return (
+    <section className="card rise space-y-3 p-4 sm:p-6">
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white">Voitures d'exemple</h2>
+      <p className="text-sm muted">Pour essayer le site avec beaucoup de voitures (environ 100, avec des images dessinées). À retirer avant d'ouvrir le site aux clients.</p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <button className="btn" disabled={!!busy} onClick={() => void run('add')}>{busy === 'add' ? <span className="spinner" /> : <><Ic.Plus /> Ajouter les voitures d'exemple</>}</button>
+        <button className="btn-danger" disabled={!!busy} onClick={() => void run('remove')}>{busy === 'remove' ? <span className="spinner" /> : "Retirer les voitures d'exemple"}</button>
+      </div>
+      {msg && <p className="text-sm muted">{msg}</p>}
+    </section>
+  );
+}
+
 export function Admin() {
   const [logged, setLogged] = useState(!!session.get());
   const [data, setData] = useState<Data | null>(null);
@@ -355,7 +387,10 @@ export function Admin() {
       {tab === 'security' ? (
         <PasswordForm />
       ) : tab === 'shop' ? (
-        <ShopForm shop={data.shop} onSaved={setData} />
+        <>
+          <ShopForm shop={data.shop} onSaved={setData} />
+          <SampleCars onDone={setData} onAuth={() => setLogged(false)} />
+        </>
       ) : edit ? (
         <CarForm initial={edit} onSaved={saved} onCancel={() => setEdit(null)} />
       ) : (

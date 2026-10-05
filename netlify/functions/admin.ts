@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { json, recordFail, sameOrigin, tooManyFails } from '../lib/http';
 import { checkSetupCode, hasPassword, login, passwordProblem, setPassword, setupCode, validToken } from '../lib/auth';
 import { photoStore, readData, writeData } from '../lib/store';
+import { SEED } from '../lib/seed';
 
 export const config = { path: '/api/admin' };
 
@@ -44,7 +45,9 @@ const Body = z.discriminatedUnion('action', [
   z.object({ action: z.literal('saveCar'), car: CarIn }),
   z.object({ action: z.literal('deleteCar'), id: z.string().max(60) }),
   z.object({ action: z.literal('saveShop'), shop: ShopIn }),
-  z.object({ action: z.literal('uploadPhoto'), dataUrl: z.string().max(4_000_000) }),
+  z.object({ action: z.literal('uploadPhoto'), dataUrl: z.string().max(6_000_000) }),
+  z.object({ action: z.literal('addSamples') }),
+  z.object({ action: z.literal('removeSamples') }),
 ]);
 
 const photoId = (url: string) => url.match(/id=([\w-]+)/)?.[1];
@@ -104,7 +107,7 @@ export default async (req: Request): Promise<Response> => {
     const m = body.dataUrl.match(/^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/);
     if (!m) return json({ error: 'Photo JPEG attendue.' }, 400);
     const bytes = Buffer.from(m[1], 'base64');
-    if (bytes.length > 2_500_000) return json({ error: 'Photo trop grande.' }, 413);
+    if (bytes.length > 4_000_000) return json({ error: 'Photo trop grande.' }, 413);
     const id = randomBytes(9).toString('base64url');
     await photoStore().set(id, new Uint8Array(bytes).buffer);
     return json({ url: `/api/photo?id=${id}` });
@@ -124,6 +127,14 @@ export default async (req: Request): Promise<Response> => {
       for (const old of data.cars[i].photos) if (!car.photos.includes(old) && photoId(old)) await photoStore().delete(photoId(old)!);
       data.cars[i] = car;
     } else data.cars.unshift(car);
+  } else if (body.action === 'addSamples') {
+    // Testing: add the example cars that are not on the site yet (the owner's own cars are kept).
+    const have = new Set(data.cars.map((c) => c.id));
+    data.cars.push(...SEED.cars.filter((c) => !have.has(c.id)));
+  } else if (body.action === 'removeSamples') {
+    // Before going live: remove every example car still on the site (cars the owner edited count as theirs).
+    const sample = new Set(SEED.cars.map((c) => c.id));
+    data.cars = data.cars.filter((c) => !sample.has(c.id) || c.photos.some((p) => p.startsWith('/api/photo')));
   } else if (body.action === 'deleteCar') {
     const gone = data.cars.find((x) => x.id === body.id);
     if (!gone) return json({ error: 'Voiture introuvable.' }, 404);
