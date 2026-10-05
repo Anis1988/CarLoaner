@@ -15,7 +15,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   } catch {
     /* not JSON */
   }
-  if (!res.ok || data === null) throw new Error(data?.error ?? (res.status === 404 ? 'Serveur indisponible (les fonctions ne tournent que sur Netlify).' : `Erreur ${res.status}`));
+  if (!res.ok || data === null) throw new Error(data?.error ?? (res.status === 404 || res.ok ? 'Serveur indisponible (les fonctions ne tournent que sur Netlify).' : `Erreur ${res.status}`));
   return data as T;
 }
 
