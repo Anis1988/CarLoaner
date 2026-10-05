@@ -16,6 +16,13 @@ const STATUS = {
   maintenance: { pill: 'bg-slate-500/15 text-slate-700 ring-slate-500/40 dark:text-slate-300', dot: 'bg-slate-400 text-slate-400' },
 } as const;
 
+/** Card border + glow by availability: green = available, orange = rented, grey = in the garage. */
+const BORDER = {
+  available: '!border-2 !border-emerald-400 hover:shadow-[0_0_0_1px_rgba(16,185,129,.4),0_18px_45px_-12px_rgba(16,185,129,.55)] dark:!border-emerald-400/70',
+  rented: '!border-2 !border-orange-400 hover:shadow-[0_0_0_1px_rgba(251,146,60,.4),0_18px_45px_-12px_rgba(251,146,60,.5)] dark:!border-orange-400/70',
+  maintenance: '!border-2 !border-slate-400 hover:shadow-[0_18px_45px_-12px_rgba(100,116,139,.5)] dark:!border-slate-500',
+} as const;
+
 export function StatusBadge({ car, solid = false }: { car: Car; solid?: boolean }) {
   const { t, lang } = useLang();
   const s = STATUS[car.status];
@@ -47,7 +54,7 @@ export function CarCard({ car, index, onOpen }: { car: Car; index: number; onOpe
     <article className="rise group" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
       <button
         onClick={onOpen}
-        className="card shine block w-full overflow-hidden text-start transition duration-300 hover:-translate-y-1.5 hover:shadow-glow focus-visible:shadow-glow focus-visible:outline-none active:scale-[0.985]"
+        className={`card shine block w-full overflow-hidden text-start transition duration-300 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/30 active:scale-[0.985] ${BORDER[car.status]}`}
         aria-label={`${t.details}: ${car.name} ${car.year}`}
       >
         <div className="relative aspect-[16/11] overflow-hidden bg-slate-100 dark:bg-ink-800">
@@ -71,10 +78,13 @@ export function CarCard({ car, index, onOpen }: { car: Car; index: number; onOpe
   );
 }
 
+/** Coloured top edge of the details sheet, same colours as the card borders. */
+const BORDER_TOP = { available: 'border-t-4 border-emerald-400', rented: 'border-t-4 border-orange-400', maintenance: 'border-t-4 border-slate-400' } as const;
+
 const lines = (s: string) => s.split('\n').map((x) => x.trim()).filter(Boolean);
 
 /** Car details as a sheet: slides up from the bottom on phones, a centred panel on bigger screens. */
-export function CarSheet({ car, shop, onClose }: { car: Car; shop: Shop; onClose: () => void }) {
+export function CarSheet({ car, shop, onClose, leaving = false }: { car: Car; shop: Shop; onClose: () => void; leaving?: boolean }) {
   const { t } = useLang();
   const [i, setI] = useState(0);
   const strip = useRef<HTMLDivElement>(null);
@@ -106,8 +116,8 @@ export function CarSheet({ car, shop, onClose }: { car: Car; shop: Shop; onClose
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6" role="dialog" aria-modal="true" aria-label={car.name}>
-      <button className="fade absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={onClose} aria-label={t.close} />
-      <div className="sheet relative flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl dark:bg-ink-900 md:rounded-[2rem]">
+      <button className={`${leaving ? 'fade-leave' : 'fade'} absolute inset-0 bg-ink-950/60 backdrop-blur-sm`} onClick={onClose} aria-label={t.close} />
+      <div className={`${leaving ? 'sheet-leave' : 'sheet'} relative flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl dark:bg-ink-900 md:rounded-[2rem] ${BORDER_TOP[car.status]}`}>
         <div className="absolute inset-x-0 top-2 z-10 mx-auto h-1.5 w-12 rounded-full bg-white/70 md:hidden" aria-hidden="true" />
         <button className="icon-btn absolute end-3 top-3 z-10 !bg-white/90 dark:!bg-ink-900/90" onClick={onClose} aria-label={t.close}><Ic.Close /></button>
 
@@ -116,7 +126,9 @@ export function CarSheet({ car, shop, onClose }: { car: Car; shop: Shop; onClose
             <div className="relative bg-slate-100 dark:bg-ink-800">
               <div ref={strip} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto">
                 {car.photos.map((p, n) => (
-                  <img key={p} src={p} alt={t.photoOf(n + 1, car.photos.length)} className="aspect-[4/3] w-full shrink-0 snap-center object-cover md:aspect-auto md:h-full md:min-h-[420px]" />
+                  <div key={p} className="w-full shrink-0 snap-center overflow-hidden">
+                    <img src={p} alt={t.photoOf(n + 1, car.photos.length)} className={`aspect-[4/3] w-full object-cover md:aspect-auto md:h-full md:min-h-[420px] ${n === 0 ? 'zoom-in' : ''}`} />
+                  </div>
                 ))}
               </div>
               {car.photos.length > 1 && (

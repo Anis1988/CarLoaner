@@ -49,12 +49,20 @@
 @keyframes sheet { from { transform: translateY(100%); } to { transform: none; } }
 @keyframes pop { from { opacity: 0; transform: translateY(24px) scale(0.97); } to { opacity: 1; transform: none; } }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes sheet-out { from { transform: none; } to { transform: translateY(100%); } }
+@keyframes pop-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(24px) scale(0.96); } }
+@keyframes zoom-in { from { transform: scale(1.12); filter: blur(6px); } to { transform: none; filter: none; } }
 @keyframes pulse-dot { 0%, 100% { box-shadow: 0 0 0 0 currentColor; } 50% { box-shadow: 0 0 0 5px transparent; } }
 @keyframes shine { from { transform: translateX(-120%) skewX(-20deg); } to { transform: translateX(220%) skewX(-20deg); } }
 .rise { animation: rise 0.55s cubic-bezier(.2,.8,.2,1) both; }
 .fade { animation: fade 0.25s ease-out both; }
 .sheet { animation: sheet 0.38s cubic-bezier(.2,.8,.2,1) both; }
 @media (min-width: 768px) { .sheet { animation-name: pop; } }
+.sheet-leave { animation: sheet-out 0.28s cubic-bezier(.4,0,1,1) both; }
+@media (min-width: 768px) { .sheet-leave { animation-name: pop-out; } }
+.fade-leave { animation: fade-out 0.28s ease-in both; }
+.zoom-in { animation: zoom-in 0.7s cubic-bezier(.2,.8,.2,1) both; }
 .live-dot { animation: pulse-dot 1.8s ease-in-out infinite; }
 .shine { position: relative; overflow: hidden; }
 .shine::after { content: ''; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); transform: translateX(-120%) skewX(-20deg); pointer-events: none; }
@@ -63,5 +71,5 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .rise, .fade, .sheet, .live-dot, .shine:hover::after, .spinner { animation: none !important; }
+  .rise, .fade, .sheet, .sheet-leave, .fade-leave, .zoom-in, .live-dot, .shine:hover::after, .spinner { animation: none !important; }
 }

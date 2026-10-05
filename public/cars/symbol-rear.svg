@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fde8e4"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+<linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfdbfe"/><stop offset="1" stop-color="#475569"/></linearGradient></defs>
+<rect width="800" height="600" fill="url(#bg)"/><rect y="420" width="800" height="180" fill="#e2e8f0"/>
+<ellipse cx="400" cy="440" rx="250" ry="20" fill="#0f172a" opacity="0.2"/>
+<rect x="185" y="380" width="60" height="70" rx="12" fill="#111827"/><rect x="555" y="380" width="60" height="70" rx="12" fill="#111827"/>
+<path d="M170 400 L178 290 Q186 255 240 248 L560 248 Q614 255 622 290 L630 400 Q630 420 610 420 L190 420 Q170 420 170 400 Z" fill="#c0392b" stroke="#0f172a" stroke-opacity="0.35" stroke-width="3"/>
+<path d="M245 248 L285 178 Q295 165 315 165 L485 165 Q505 165 515 178 L555 248 Z" fill="#c0392b" stroke="#0f172a" stroke-opacity="0.3" stroke-width="3"/>
+<path d="M268 242 L298 186 L502 186 L532 242 Z" fill="url(#glass)"/>
+<path d="M190 285 L270 280 L268 320 L192 322 Z" fill="#ef4444" stroke="#7f1d1d" stroke-opacity="0.5"/><path d="M610 285 L530 280 L532 320 L608 322 Z" fill="#ef4444" stroke="#7f1d1d" stroke-opacity="0.5"/>
+<rect x="335" y="330" width="130" height="30" rx="4" fill="#f8fafc" stroke="#94a3b8"/><text x="400" y="351" text-anchor="middle" font-family="Arial" font-size="16" fill="#334155">00123 119 31</text>
+<rect x="210" y="395" width="380" height="14" rx="6" fill="#0f172a" opacity="0.25"/>
+<text x="400" y="560" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#64748b">Vue arrière · Rear view (exemple)</text>
+</svg>

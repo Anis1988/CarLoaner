@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff4dc"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+<linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfdbfe"/><stop offset="1" stop-color="#475569"/></linearGradient></defs>
+<rect width="800" height="600" fill="url(#bg)"/><rect y="420" width="800" height="180" fill="#e2e8f0"/>
+<ellipse cx="404" cy="428" rx="330" ry="22" fill="#0f172a" opacity="0.18"/>
+<g transform="translate(0,90)">
+<path d="M60 305 L70 230 Q80 175 140 160 L250 150 L640 150 Q700 152 712 210 L740 260 Q750 280 748 305 L748 330 L60 330 Z" fill="#f59e0b" stroke="#0f172a" stroke-opacity="0.35" stroke-width="3"/>
+<path d="M110 230 L120 190 Q130 170 160 168 L250 166 L250 230 Z M265 166 L470 166 L470 230 L265 230 Z" fill="url(#glass)" opacity="0.9"/>
+<rect x="64" y="292" width="34" height="12" rx="4" fill="#fde68a"/><rect x="712" y="290" width="32" height="12" rx="4" fill="#ef4444"/>
+<line x1="80" y1="312" x2="740" y2="312" stroke="#0f172a" stroke-opacity="0.2" stroke-width="3"/>
+<g fill="#111827"><circle cx="210" cy="330" r="52"/><circle cx="600" cy="330" r="52"/></g>
+<g fill="#9ca3af"><circle cx="210" cy="330" r="26"/><circle cx="600" cy="330" r="26"/></g>
+<g fill="#4b5563"><circle cx="210" cy="330" r="8"/><circle cx="600" cy="330" r="8"/></g></g>
+<text x="400" y="560" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#64748b">Photo d'exemple · Sample photo</text>
+</svg>

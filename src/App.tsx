@@ -31,9 +31,9 @@ export default function App() {
     <div className="min-h-screen">
       <header className="glass sticky top-0 z-40 !border-x-0 !border-t-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="mx-auto flex h-[68px] max-w-7xl items-center gap-2 px-4">
-          <a href="/" className="flex min-w-0 items-center gap-2.5">
+          <a href="/" className="flex min-w-0 items-center gap-2.5" aria-label={data?.shop.name ?? t.carRental}>
             <Logo />
-            <span className="min-w-0">
+            <span className={`min-w-0 ${isAdmin ? '' : 'hidden sm:block'}`}>
               <span className="block truncate font-display text-base font-bold leading-tight text-slate-900 dark:text-white sm:text-lg">{isAdmin ? 'Espace propriétaire' : data?.shop.name ?? t.carRental}</span>
               {!isAdmin && data?.shop.city && <span className="block truncate text-xs muted">{t.carRental} · {data.shop.city}</span>}
             </span>
@@ -41,11 +41,19 @@ export default function App() {
           <div className="ms-auto flex shrink-0 items-center gap-1.5">
             {!isAdmin && tel && <a className="btn-primary !hidden !min-h-[44px] md:!inline-flex" href={tel}><Ic.Phone /><bdi dir="ltr">{data!.shop.phone}</bdi></a>}
             <button className="icon-btn" onClick={toggle} aria-label={theme === 'dark' ? t.light : t.dark} title={theme === 'dark' ? t.light : t.dark}>{theme === 'dark' ? <Ic.Sun /> : <Ic.Moon />}</button>
-            {!isAdmin && <button className="icon-btn !w-auto px-3 text-sm font-bold" onClick={() => setLang(lang === 'fr' ? 'ar' : 'fr')} aria-label="Langue / اللغة">{lang === 'fr' ? 'ع' : 'FR'}</button>}
+            {!isAdmin && (
+              <div className="flex h-11 rounded-2xl border border-slate-200 bg-white/80 p-1 dark:border-white/10 dark:bg-white/5" role="group" aria-label="Langue / اللغة">
+                {(['fr', 'ar'] as const).map((l) => (
+                  <button key={l} onClick={() => setLang(l)} aria-pressed={lang === l} lang={l} className={`rounded-xl px-2.5 text-sm font-semibold transition ${lang === l ? 'bg-gradient-to-r from-brand-500 to-cyan-500 text-white shadow-glow' : 'text-slate-600 hover:text-brand-600 dark:text-slate-300'}`}>
+                    {l === 'fr' ? 'Français' : 'العربية'}
+                  </button>
+                ))}
+              </div>
+            )}
             {isAdmin ? (
-              <a className="icon-btn" href="/" aria-label="Retour au site" title="Retour au site"><Ic.Car /></a>
+              <a className="icon-btn !w-auto gap-1.5 px-3 text-sm font-semibold" href="/"><Ic.Car /> Site</a>
             ) : (
-              <a className="icon-btn" href="/admin" aria-label={t.owner} title={t.owner}><Ic.Key /></a>
+              <a className="icon-btn !w-auto gap-1.5 px-3 text-sm font-semibold" href="/admin"><Ic.Key className="h-4 w-4" /> {t.admin}</a>
             )}
           </div>
         </div>

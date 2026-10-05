@@ -4,6 +4,7 @@ import { useLang } from '../lib/i18n';
 import { CarCard, CarSheet } from '../components/Car';
 import * as Ic from '../components/Icons';
 
+const PAGE = 24; // cars shown at first; "Voir plus" adds more (keeps phones fast with 100+ cars)
 const lines = (s: string) => s.split('\n').map((x) => x.trim()).filter(Boolean);
 
 function Skeleton() {
@@ -20,6 +21,18 @@ export function Home({ data, err }: { data?: Data; err?: string }) {
   const [box, setBox] = useState<'all' | 'manual' | 'auto'>('all');
   const [cheap, setCheap] = useState(false);
   const [open, setOpen] = useState<string | null>(() => window.location.hash.slice(1) || null);
+  const [q, setQ] = useState('');
+  const [limit, setLimit] = useState(PAGE);
+  // The sheet stays on screen a moment after closing so it can slide away (also when the phone's back button closes it).
+  const [shown, setShown] = useState<string | null>(open);
+  const [leaving, setLeaving] = useState(false);
+  useEffect(() => {
+    if (open) return void (setShown(open), setLeaving(false));
+    if (!shown) return;
+    setLeaving(true);
+    const t = setTimeout(() => (setShown(null), setLeaving(false)), 280);
+    return () => clearTimeout(t);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const onHash = () => setOpen(window.location.hash.slice(1) || null);
@@ -32,16 +45,19 @@ export function Home({ data, err }: { data?: Data; err?: string }) {
 
   const cars = useMemo(() => {
     let list = data?.cars ?? [];
+    const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (words.length) list = list.filter((c) => words.every((w) => `${c.name} ${c.year} ${t[c.category]} ${t[c.fuel]}`.toLowerCase().includes(w)));
     if (onlyFree) list = list.filter((c) => c.status === 'available');
     if (box !== 'all') list = list.filter((c) => c.transmission === box);
     const rank = (s: string) => (s === 'available' ? 0 : s === 'rented' ? 1 : 2);
     return [...list].sort((a, b) => (cheap ? a.pricePerDay - b.pricePerDay : rank(a.status) - rank(b.status)));
-  }, [data, onlyFree, box, cheap]);
+  }, [data, onlyFree, box, cheap, q, t]);
+  useEffect(() => setLimit(PAGE), [onlyFree, box, cheap, q]);
 
   if (err) return <p className="card p-5 text-red-600 dark:text-red-300">{err}</p>;
   if (!data) return <Skeleton />;
 
-  const selected = data.cars.find((c) => c.id === open);
+  const selected = data.cars.find((c) => c.id === shown);
   const free = data.cars.filter((c) => c.status === 'available').length;
   const chip = (on: boolean) => `chip ${on ? 'chip-on' : 'chip-off'}`;
 
@@ -49,21 +65,21 @@ export function Home({ data, err }: { data?: Data; err?: string }) {
     <div className="space-y-6">
       {data.sample && <p className="rise rounded-2xl bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-800 ring-1 ring-amber-500/30 dark:text-amber-200">{t.sample}</p>}
 
-      <section className="rise relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-ink-900 via-ink-800 to-brand-900 p-6 text-white shadow-2xl sm:p-10">
-        <div className="pointer-events-none absolute -end-16 -top-20 h-64 w-64 rounded-full bg-cyan-400/30 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -start-10 h-64 w-64 rounded-full bg-brand-400/30 blur-3xl" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.15] [background-image:linear-gradient(rgba(255,255,255,.25)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.25)_1px,transparent_1px)] [background-size:28px_28px]" />
+      <section className="rise relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white via-brand-50 to-cyan-100 p-6 text-slate-900 shadow-soft ring-1 ring-brand-200/70 transition-colors duration-500 dark:from-ink-900 dark:via-ink-800 dark:to-brand-900 dark:text-white dark:shadow-2xl dark:ring-white/10 sm:p-10">
+        <div className="pointer-events-none absolute -end-16 -top-20 h-64 w-64 rounded-full bg-cyan-300/40 blur-3xl dark:bg-cyan-400/30" />
+        <div className="pointer-events-none absolute -bottom-24 -start-10 h-64 w-64 rounded-full bg-brand-300/40 blur-3xl dark:bg-brand-400/30" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.5] [background-image:linear-gradient(rgba(15,23,42,.06)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,.06)_1px,transparent_1px)] [background-size:28px_28px] dark:opacity-[0.15] dark:[background-image:linear-gradient(rgba(255,255,255,.25)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.25)_1px,transparent_1px)]" />
         <div className="relative">
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium ring-1 ring-white/20 backdrop-blur"><Ic.Pin className="h-3.5 w-3.5" /> {t.carRental} {data.shop.city ? `${t.in} ${data.shop.city}` : ''}</p>
+          <p className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-white/70 px-3 py-1 text-xs font-medium text-brand-800 ring-1 ring-brand-200 backdrop-blur dark:bg-white/10 dark:text-white dark:ring-white/20"><Ic.Pin className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{data.shop.name} · {t.carRental} {data.shop.city ? `${t.in} ${data.shop.city}` : ''}</span></p>
           <h1 className="mt-3 max-w-2xl text-3xl font-bold leading-[1.1] sm:text-5xl">
-            <span className="bg-gradient-to-r from-white via-brand-100 to-cyan-200 bg-clip-text text-transparent">{t.heroTitle}</span>
+            <span className="bg-gradient-to-r from-slate-900 via-brand-700 to-cyan-700 bg-clip-text text-transparent dark:from-white dark:via-brand-100 dark:to-cyan-200">{t.heroTitle}</span>
           </h1>
-          <p className="mt-3 max-w-xl text-sm text-slate-300 sm:text-base">{t.heroSub}</p>
+          <p className="mt-3 max-w-xl text-sm text-slate-600 dark:text-slate-300 sm:text-base">{t.heroSub}</p>
           <div className="mt-6 grid max-w-md grid-cols-3 gap-2">
             {([[String(free), t.statAvailable], [String(data.cars.length), t.statCars], ['100%', t.statCash]] as const).map(([n, l]) => (
-              <div key={l} className="rounded-2xl bg-white/10 p-3 text-center ring-1 ring-white/15 backdrop-blur">
+              <div key={l} className="rounded-2xl bg-white/80 p-3 text-center ring-1 ring-brand-200/80 backdrop-blur dark:bg-white/10 dark:ring-white/15">
                 <p className="font-display text-2xl font-bold"><bdi>{n}</bdi></p>
-                <p className="text-[11px] text-slate-300">{l}</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-300">{l}</p>
               </div>
             ))}
           </div>
@@ -77,9 +93,13 @@ export function Home({ data, err }: { data?: Data; err?: string }) {
       <section id="voitures" className="scroll-mt-20 space-y-4">
         <div className="flex items-end justify-between gap-2">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t.fleet}</h2>
-          <span className="text-sm muted"><bdi>{cars.length}</bdi> / <bdi>{data.cars.length}</bdi></span>
+          <span className="text-sm muted">{t.results(cars.length)}</span>
         </div>
-        <div className="sticky top-[68px] z-20 -mx-4 bg-slate-50/80 px-4 py-2 backdrop-blur-xl dark:bg-ink-950/80">
+        <div className="sticky top-[68px] z-20 -mx-4 space-y-2 bg-slate-50/80 px-4 py-2 backdrop-blur-xl dark:bg-ink-950/80">
+          <label className="relative block">
+            <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-slate-400"><Ic.Search className="h-5 w-5" /></span>
+            <input className="input !rounded-full !ps-11" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.search} aria-label={t.search} />
+          </label>
           <div className="no-scrollbar flex gap-2 overflow-x-auto">
             <button className={chip(!onlyFree)} onClick={() => setOnlyFree(false)}>{t.all}</button>
             <button className={chip(onlyFree)} onClick={() => setOnlyFree(true)}><span className="h-2 w-2 rounded-full bg-current" />{t.onlyAvailable}</button>
@@ -91,9 +111,12 @@ export function Home({ data, err }: { data?: Data; err?: string }) {
 
         {cars.length ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {cars.map((c, i) => <CarCard key={`${c.id}-${onlyFree}-${box}-${cheap}`} car={c} index={i} onOpen={() => openCar(c.id)} />)}
+            {cars.slice(0, limit).map((c, i) => <CarCard key={`${c.id}-${onlyFree}-${box}-${cheap}`} car={c} index={i % PAGE} onOpen={() => openCar(c.id)} />)}
           </div>
-        ) : (
+        ) : null}
+        {cars.length > limit ? (
+          <button className="btn mx-auto flex w-full sm:w-auto" onClick={() => setLimit((l) => l + PAGE)}>{t.showMore(cars.length - limit)}</button>
+        ) : cars.length ? null : (
           <p className="card p-8 text-center muted">{t.none}</p>
         )}
       </section>
@@ -116,7 +139,7 @@ export function Home({ data, err }: { data?: Data; err?: string }) {
         </div>
       </section>
 
-      {selected && <CarSheet car={selected} shop={data.shop} onClose={close} />}
+      {selected && <CarSheet car={selected} shop={data.shop} onClose={close} leaving={leaving} />}
     </div>
   );
 }
