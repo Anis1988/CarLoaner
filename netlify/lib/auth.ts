@@ -21,7 +21,7 @@ interface AuthRecord {
 
 const KEY = 'auth';
 const DAYS = 30;
-export const setupCode = () => process.env.OWNER_SETUP_CODE || process.env.OWNER_PASSWORD || '';
+export const setupCode = () => process.env.OWNER_SETUP_CODE || '';
 
 const read = async () => (await dataStore().get(KEY, { type: 'json' })) as AuthRecord | null;
 export const hasPassword = async () => !!(await read());
