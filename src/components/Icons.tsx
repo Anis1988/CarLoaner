@@ -32,3 +32,5 @@ export const Facebook = (p: P) => <I {...p}><path d="M14 8h3V4h-3a4 4 0 0 0-4 4v
 export const Instagram = (p: P) => <I {...p}><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><path d="M17.5 6.5h.01" /></I>;
 export const Image = (p: P) => <I {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="m21 17-5-5-9 8" /></I>;
 export const Sort = (p: P) => <I {...p}><path d="M7 4v16M4 17l3 3 3-3M14 6h7M14 12h5M14 18h3" /></I>;
+export const Home = (p: P) => <I {...p}><path d="M3 11.5 12 4l9 7.5" /><path d="M5.5 9.5V20h13V9.5" /><path d="M10 20v-5h4v5" /></I>;
+export const Arrow = (p: P) => <I {...p}><path d="M5 12h14M13 6l6 6-6 6" /></I>;

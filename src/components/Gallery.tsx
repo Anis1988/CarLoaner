@@ -57,7 +57,7 @@ export function Gallery({ photos, alt, full = false, start = 0, keys = true, onI
         onClick={(e) => (e.stopPropagation(), goTo(i + (side === 'next' ? 1 : -1)))}
         disabled={disabled}
         aria-label={side === 'next' ? t.nextPhoto : t.prevPhoto}
-        className={`absolute top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-lg ring-1 ring-black/5 backdrop-blur transition hover:scale-110 active:scale-95 disabled:pointer-events-none disabled:opacity-0 dark:bg-ink-900/85 dark:text-white dark:ring-white/10 ${side === 'prev' ? 'start-3' : 'end-3'}`}
+        className={`absolute top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow-lg ring-1 ring-white/70 backdrop-blur-md transition duration-300 hover:scale-110 active:scale-90 disabled:pointer-events-none disabled:opacity-0 motion-reduce:transition-none dark:bg-ink-950/70 dark:text-white dark:ring-white/15 ${side === 'prev' ? 'start-3' : 'end-3'}`}
       >
         <Ic.Back className={`h-6 w-6 ${(side === 'next') !== rtl ? 'rotate-180' : ''}`} />
       </button>
@@ -85,11 +85,11 @@ export function Gallery({ photos, alt, full = false, start = 0, keys = true, onI
         </div>
         {many && arrow('prev')}
         {many && arrow('next')}
-        {many && <span className="pointer-events-none absolute bottom-3 start-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur"><bdi dir="ltr">{i + 1} / {photos.length}</bdi></span>}
-        {onOpenFull && <span className="pointer-events-none absolute bottom-3 end-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur"><Ic.Expand className="h-4 w-4" /></span>}
+        {many && <span className="pointer-events-none absolute bottom-3 start-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-white/15 backdrop-blur-md"><bdi dir="ltr">{i + 1} / {photos.length}</bdi></span>}
+        {onOpenFull && <span className="pointer-events-none absolute bottom-3 end-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white ring-1 ring-white/15 backdrop-blur-md"><Ic.Expand className="h-4 w-4" /></span>}
       </div>
       {many && (
-        <div className={`no-scrollbar flex gap-2 overflow-x-auto p-2 ${full ? 'justify-center bg-black' : 'bg-slate-100 dark:bg-ink-800'}`}>
+        <div className={`no-scrollbar flex gap-2 overflow-x-auto p-2 ${full ? 'justify-center bg-black' : 'bg-slate-100/90 dark:bg-ink-800/80'}`}>
           {photos.map((p, n) => (
             <button
               type="button"
@@ -97,7 +97,7 @@ export function Gallery({ photos, alt, full = false, start = 0, keys = true, onI
               onClick={() => goTo(n)}
               aria-label={t.photoOf(n + 1, photos.length)}
               aria-current={n === i}
-              className={`h-14 w-20 shrink-0 overflow-hidden rounded-xl ring-2 transition ${n === i ? 'scale-105 ring-brand-500' : 'opacity-70 ring-transparent hover:opacity-100'}`}
+              className={`tap h-14 w-20 shrink-0 overflow-hidden rounded-xl ring-2 ${n === i ? 'opacity-100 ring-brand-500 shadow-glow' : 'opacity-60 ring-transparent hover:opacity-100'}`}
             >
               <img src={p} alt="" className="h-full w-full object-cover" loading="lazy" />
             </button>
@@ -119,7 +119,7 @@ export function Lightbox({ photos, alt, start, onClose }: { photos: string[]; al
   // Drawn at the top of the page (not inside the sliding details panel), so it really fills the screen.
   return createPortal(
     <div data-lightbox className="fade fixed inset-0 z-[60] bg-black" role="dialog" aria-modal="true" aria-label={alt}>
-      <button className="absolute end-3 top-3 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur hover:bg-white/25" style={{ marginTop: 'env(safe-area-inset-top)' }} onClick={onClose} aria-label={t.close}><Ic.Close className="h-6 w-6" /></button>
+      <button className="absolute end-3 top-3 z-20 tap flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-white ring-1 ring-white/20 backdrop-blur-md hover:bg-white/25" style={{ marginTop: 'env(safe-area-inset-top)' }} onClick={onClose} aria-label={t.close}><Ic.Close className="h-6 w-6" /></button>
       <div className="h-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <Gallery photos={photos} alt={alt} full start={start} />
       </div>

@@ -64,6 +64,7 @@ const fr = {
   results: (n: number) => `${n} résultat${n > 1 ? 's' : ''}`,
   dark: 'Mode sombre',
   light: 'Mode clair',
+  navHome: 'Accueil',
   navCars: 'Voitures',
   navInfo: 'Infos',
   close: 'Fermer',
@@ -79,6 +80,8 @@ const fr = {
   climate: 'Clim',
   yes: 'Oui',
   no: 'Non',
+  noneHint: "Essayez un autre mot ou retirez un filtre.",
+  reset: 'Tout afficher',
 };
 type Dict = typeof fr;
 
@@ -144,6 +147,7 @@ const ar: Dict = {
   results: (n) => `${n} نتيجة`,
   dark: 'الوضع الليلي',
   light: 'الوضع النهاري',
+  navHome: 'الرئيسية',
   navCars: 'السيارات',
   navInfo: 'معلومات',
   close: 'إغلاق',
@@ -159,6 +163,8 @@ const ar: Dict = {
   climate: 'مكيّف',
   yes: 'نعم',
   no: 'لا',
+  noneHint: 'جرّب كلمة أخرى أو أزل أحد الفلاتر.',
+  reset: 'عرض الكل',
 };
 
 const DICTS: Record<Lang, Dict> = { fr, ar };
@@ -169,8 +175,10 @@ function apply(lang: Lang) {
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
 }
 
+// The owner's pages (/admin) are in French only, so they stay French and left-to-right whatever the visitor side uses.
 let current: Lang = (() => {
   try {
+    if (window.location.pathname.startsWith('/admin')) return 'fr';
     return (localStorage.getItem(KEY) as Lang) === 'ar' ? 'ar' : 'fr';
   } catch {
     return 'fr';

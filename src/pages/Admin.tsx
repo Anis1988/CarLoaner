@@ -3,6 +3,7 @@ import { AuthError, adminApi, getData, session, shrinkLogo, shrinkPhoto, type Da
 import * as Ic from '../components/Icons';
 import type { Car, Shop } from '../lib/types';
 import { Money } from '../components/Car';
+import { Dock } from '../components/Dock';
 
 type Draft = Omit<Car, 'id' | 'updatedAt'> & { id?: string };
 const EMPTY: Draft = {
@@ -52,8 +53,11 @@ function Auth({ onOk }: { onOk: () => void }) {
 
   return (
     <div className="mx-auto mt-6 max-w-md">
-      <div className="card rise space-y-4 p-6">
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-brand-500 to-cyan-500 text-white shadow-glow"><Ic.Key className="h-7 w-7" /></span>
+      <div className="card rise space-y-4 !rounded-4xl p-6">
+        <span className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-brand-500 to-cyan-500 text-white shadow-glow dark:text-ink-950">
+          <span className="absolute -inset-4 -z-10 rounded-[2.5rem] bg-brand-400/25 blur-2xl" aria-hidden="true" />
+          <Ic.Key className="h-8 w-8" />
+        </span>
         {mode === 'loading' ? (
           <p className="text-center muted"><span className="spinner" /></p>
         ) : mode === 'login' ? (
@@ -67,7 +71,7 @@ function Auth({ onOk }: { onOk: () => void }) {
             </Field>
             <Err msg={err} />
             <button className="btn-primary w-full" disabled={!p1 || busy} onClick={() => void run(() => adminApi.login(p1))}>{busy ? <span className="spinner" /> : 'Entrer'}</button>
-            <button className="block w-full text-center text-sm text-brand-700 underline dark:text-brand-300" onClick={() => (setMode('setup'), setErr(''), setP1(''))}>Mot de passe oublié ?</button>
+            <button className="tap block min-h-[44px] w-full rounded-2xl text-center text-sm text-brand-700 underline dark:text-brand-300" onClick={() => (setMode('setup'), setErr(''), setP1(''))}>Mot de passe oublié ?</button>
           </>
         ) : (
           <>
@@ -86,12 +90,12 @@ function Auth({ onOk }: { onOk: () => void }) {
             </Field>
             <Err msg={err} />
             <button className="btn-primary w-full" disabled={!code || !p1 || !p2 || busy} onClick={submitSetup}>{busy ? <span className="spinner" /> : 'Créer mon mot de passe'}</button>
-            {!first && <button className="block w-full text-center text-sm text-brand-700 underline dark:text-brand-300" onClick={() => (setMode('login'), setErr(''))}>← Retour à la connexion</button>}
+            {!first && <button className="tap block min-h-[44px] w-full rounded-2xl text-center text-sm text-brand-700 underline dark:text-brand-300" onClick={() => (setMode('login'), setErr(''))}>← Retour à la connexion</button>}
             <p className="text-xs muted">Votre mot de passe est enregistré sous forme chiffrée : personne ne peut le lire, pas même la personne qui a créé le site.</p>
           </>
         )}
       </div>
-      <a className="mt-4 block text-center text-sm muted underline" href="/">← Retour au site</a>
+      <a className="tap mx-auto mt-4 flex min-h-[44px] w-fit items-center rounded-2xl px-3 text-sm muted underline" href="/">← Retour au site</a>
     </div>
   );
 }
@@ -173,7 +177,7 @@ function CarForm({ initial, onSaved, onCancel }: { initial: Draft; onSaved: (d: 
 
   return (
     <section className="card rise space-y-4 p-4 sm:p-6">
-      <h2 className="text-xl font-bold text-slate-900 dark:text-white">{c.id ? `Modifier : ${initial.name}` : 'Ajouter une voiture'}</h2>
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">{c.id ? `Modifier : ${initial.name}` : 'Ajouter une voiture'}</h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label><span className="label">Nom (marque et modèle)</span><input className="input" placeholder="ex. Renault Symbol" value={c.name} onChange={(e) => set('name', e.target.value)} /></label>
         <label><span className="label">Année</span><input className="input" inputMode="numeric" value={c.year} onChange={(e) => set('year', num(e.target.value))} /></label>
@@ -217,16 +221,16 @@ function CarForm({ initial, onSaved, onCancel }: { initial: Draft; onSaved: (d: 
         <span className="label">Photos (la première est la photo principale)</span>
         <div className="flex flex-wrap gap-2">
           {c.photos.map((p, i) => (
-            <div key={p} className={`relative h-24 w-32 overflow-hidden rounded-xl border-2 ${i === 0 ? 'border-brand-500' : 'border-slate-200 dark:border-white/10'}`}>
+            <div key={p} className={`relative h-24 w-32 overflow-hidden rounded-2xl border-2 ${i === 0 ? 'border-brand-500 shadow-glow' : 'border-slate-200 dark:border-white/10'}`}>
               <img src={p} alt="" className="h-full w-full object-cover" />
-              <div className="absolute inset-x-0 bottom-0 flex justify-between bg-black/50 p-1">
-                {i > 0 ? <button className="rounded px-1.5 text-xs text-white" onClick={() => move(i)}>★ Principale</button> : <span className="px-1.5 text-xs text-white">★</span>}
-                <button className="rounded px-1.5 text-xs text-white" aria-label="Retirer la photo" onClick={() => set('photos', c.photos.filter((x) => x !== p))}>✕</button>
+              <div className="absolute inset-x-0 bottom-0 flex justify-between bg-black/55 p-1 backdrop-blur-sm">
+                {i > 0 ? <button className="tap min-h-[28px] rounded-lg px-1.5 text-xs text-white" onClick={() => move(i)}>★ Principale</button> : <span className="px-1.5 text-xs text-white">★</span>}
+                <button className="tap min-h-[28px] min-w-[28px] rounded-lg px-1.5 text-xs text-white" aria-label="Retirer la photo" onClick={() => set('photos', c.photos.filter((x) => x !== p))}>✕</button>
               </div>
             </div>
           ))}
           {c.photos.length < 10 && (
-            <label className="flex h-24 w-32 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-sm text-slate-500 hover:border-brand-400 hover:bg-brand-500/5 dark:border-white/15 dark:text-slate-400">
+            <label className="tap flex h-24 w-32 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white/50 text-sm text-slate-500 hover:border-brand-400 hover:bg-brand-500/5 dark:border-white/15 dark:bg-white/[0.03] dark:text-slate-400">
               {busy === 'photo' ? <span className="spinner" /> : <><span className="text-2xl">+</span>Ajouter</>}
               <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => void upload(e.target.files)} />
             </label>
@@ -235,7 +239,7 @@ function CarForm({ initial, onSaved, onCancel }: { initial: Draft; onSaved: (d: 
       </div>
 
       <Err msg={err} />
-      <div className="sticky bottom-3 z-10 grid grid-cols-2 gap-2 rounded-3xl glass p-2 shadow-2xl sm:static sm:flex sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
+      <div className="glass edge sticky z-10 grid grid-cols-2 gap-2 rounded-3xl p-2 shadow-float dark:shadow-float-dark sm:static sm:flex sm:border-0 sm:!bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none sm:before:hidden" style={{ bottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
         <button className="btn-primary" disabled={!!busy} onClick={() => void save()}>{busy === 'save' ? <span className="spinner" /> : 'Enregistrer'}</button>
         <button className="btn" onClick={onCancel}>Annuler</button>
       </div>
@@ -293,7 +297,7 @@ function ShopForm({ shop, onSaved }: { shop: Shop; onSaved: (d: Data) => void })
   return (
     <section className="card rise space-y-4 p-4 sm:p-6">
       <div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Infos de l'agence</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">Infos de l'agence</h2>
         <p className="text-sm muted">Le texte en arabe est facultatif : s'il est vide, les visiteurs en arabe voient le français.</p>
       </div>
       <Bi label="Nom de l'agence" fr={s.name} ar={s.nameAr ?? ''} onFr={(v) => set('name', v)} onAr={(v) => set('nameAr', v)} />
@@ -347,14 +351,14 @@ function SiteForm({ shop, onSaved, onAuth }: { shop: Shop; onSaved: (d: Data) =>
   return (
     <section className="card rise space-y-4 p-4 sm:p-6">
       <div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Mon site</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">Mon site</h2>
         <p className="text-sm muted">Tout est facultatif. Laissez vide pour garder le texte par défaut.</p>
       </div>
 
       <div className="space-y-1.5">
         <span className="label !mb-0">Logo</span>
         <div className="flex items-center gap-3">
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200 dark:ring-white/10">
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-slate-200 dark:ring-white/10">
             {s.logo ? <img src={s.logo} alt="Logo" className="h-full w-full object-contain" /> : <Ic.Image className="h-7 w-7 text-slate-400" />}
           </span>
           <label className="btn cursor-pointer">{up ? <span className="spinner" /> : s.logo ? 'Changer' : 'Ajouter un logo'}<input type="file" accept="image/*" className="hidden" onChange={(e) => void uploadLogo(e.target.files?.[0])} /></label>
@@ -402,7 +406,7 @@ function SampleCars({ onDone, onAuth }: { onDone: (d: Data) => void; onAuth: () 
   };
   return (
     <section className="card rise space-y-3 p-4 sm:p-6">
-      <h2 className="text-xl font-bold text-slate-900 dark:text-white">Voitures d'exemple</h2>
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">Voitures d'exemple</h2>
       <p className="text-sm muted">Pour essayer le site avec beaucoup de voitures (environ 100, avec des images dessinées). À retirer avant d'ouvrir le site aux clients.</p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <button className="btn" disabled={!!busy} onClick={() => void run('add')}>{busy === 'add' ? <span className="spinner" /> : <><Ic.Plus /> Ajouter les voitures d'exemple</>}</button>
@@ -461,25 +465,49 @@ export function Admin() {
   };
   const tabCls = (on: boolean) => `chip ${on ? 'chip-on' : 'chip-off'}`;
   const free = data.cars.filter((c) => c.status === 'available').length;
+  const rented = data.cars.filter((c) => c.status === 'rented').length;
+  const tabs = [
+    { key: 'cars' as const, label: `Voitures (${data.cars.length})`, short: 'Voitures', icon: <Ic.Car className="h-4 w-4" />, dockIcon: <Ic.Car /> },
+    { key: 'shop' as const, label: 'Agence', short: 'Agence', icon: <Ic.Info className="h-4 w-4" />, dockIcon: <Ic.Info /> },
+    { key: 'site' as const, label: 'Mon site', short: 'Mon site', icon: <Ic.Image className="h-4 w-4" />, dockIcon: <Ic.Image /> },
+    { key: 'security' as const, label: 'Mot de passe', short: 'Mot de passe', icon: <Ic.Shield className="h-4 w-4" />, dockIcon: <Ic.Shield /> },
+  ];
+  const go = (k: typeof tab) => (setTab(k), k === 'cars' && setEdit(null), window.scrollTo({ top: 0, behavior: 'smooth' }));
+  const STATUS_SEL = {
+    available: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+    rented: 'border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300',
+    maintenance: 'border-slate-400/40 bg-slate-500/10 text-slate-700 dark:text-slate-300',
+  } as const;
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Bonjour 👋</h1>
-          <p className="text-sm muted">{free} disponible{free > 1 ? 's' : ''} sur {data.cars.length} voiture{data.cars.length > 1 ? 's' : ''}</p>
+      <section className="card rise relative overflow-hidden !rounded-4xl p-5 sm:p-6">
+        <div className="pointer-events-none absolute -end-16 -top-20 h-56 w-56 rounded-full bg-cyan-300/35 blur-3xl dark:bg-cyan-400/15" aria-hidden="true" />
+        <div className="pointer-events-none absolute -bottom-24 -start-10 h-56 w-56 rounded-full bg-brand-300/40 blur-3xl dark:bg-brand-500/20" aria-hidden="true" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="eyebrow">Espace propriétaire</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white sm:text-3xl">Bonjour 👋</h1>
+            <p className="text-sm muted">{free} disponible{free > 1 ? 's' : ''} sur {data.cars.length} voiture{data.cars.length > 1 ? 's' : ''}</p>
+          </div>
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+            <a className="btn whitespace-nowrap !px-3" href="/">Voir le site</a>
+            <button className="btn whitespace-nowrap !px-3" onClick={() => (session.clear(), setLogged(false))}>Se déconnecter</button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <a className="btn" href="/">Voir le site</a>
-          <button className="btn" onClick={() => (session.clear(), setLogged(false))}>Se déconnecter</button>
+        <div className="relative mt-4 grid grid-cols-3 gap-2">
+          {([[free, 'disponibles', 'text-emerald-600 dark:text-emerald-300'], [rented, 'louées', 'text-amber-600 dark:text-amber-300'], [data.cars.length - free - rented, 'en réparation', 'text-slate-600 dark:text-slate-300']] as const).map(([n, l, c]) => (
+            <div key={l} className="panel relative overflow-hidden p-3 text-center">
+              <span className="absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-brand-400 to-transparent" aria-hidden="true" />
+              <p className={`font-display text-2xl font-bold ${c}`}>{n}</p>
+              <p className="truncate text-[11px] muted">{l}</p>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
       {data.sample && <p className="rounded-2xl bg-amber-500/10 px-3 py-2 text-sm text-amber-800 ring-1 ring-amber-500/30 dark:text-amber-200">Le site montre des voitures d'exemple. Modifiez-les ou retirez-les, et ajoutez les vôtres.</p>}
-      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-        <button className={tabCls(tab === 'cars')} onClick={() => (setTab('cars'), setEdit(null))}><Ic.Car className="h-4 w-4" /> Voitures ({data.cars.length})</button>
-        <button className={tabCls(tab === 'shop')} onClick={() => setTab('shop')}><Ic.Info className="h-4 w-4" /> Agence</button>
-        <button className={tabCls(tab === 'site')} onClick={() => setTab('site')}><Ic.Image className="h-4 w-4" /> Mon site</button>
-        <button className={tabCls(tab === 'security')} onClick={() => setTab('security')}><Ic.Shield className="h-4 w-4" /> Mot de passe</button>
+      <div className="no-scrollbar -mx-4 hidden gap-2 overflow-x-auto px-4 md:flex">
+        {tabs.map((x) => <button key={x.key} className={tabCls(tab === x.key)} onClick={() => go(x.key)}>{x.icon} {x.label}</button>)}
       </div>
 
       {tab === 'security' ? (
@@ -495,34 +523,38 @@ export function Admin() {
         <CarForm initial={edit} onSaved={saved} onCancel={() => setEdit(null)} />
       ) : (
         <>
-          <button className="btn-primary w-full sm:w-auto" onClick={() => setEdit({ ...EMPTY })}><Ic.Plus /> Ajouter une voiture</button>
+          <button className="btn-primary min-h-[52px] w-full sm:w-auto" onClick={() => setEdit({ ...EMPTY })}><Ic.Plus /> Ajouter une voiture</button>
           <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {data.cars.map((c, i) => (
               <li key={c.id} className="card rise space-y-3 p-3" style={{ animationDelay: `${Math.min(i, 8) * 50}ms` }}>
                 <div className="flex items-center gap-3">
-                  <img src={c.photos[0]} alt="" className="h-16 w-20 shrink-0 rounded-2xl bg-slate-100 object-cover dark:bg-ink-800" />
+                  <span className="relative h-16 w-[5.5rem] shrink-0 overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-slate-200/80 dark:bg-ink-800 dark:ring-white/10">
+                    {c.photos[0] && <img src={c.photos[0]} alt="" className="h-full w-full object-cover" />}
+                    <span className={`absolute end-1.5 top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-white dark:ring-ink-900 ${c.status === 'available' ? 'bg-emerald-500' : c.status === 'rented' ? 'bg-amber-500' : 'bg-slate-400'}`} aria-hidden="true" />
+                  </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold text-slate-900 dark:text-white">{c.name} <span className="font-normal muted">{c.year}</span></p>
-                    <p className="text-sm muted"><Money n={c.pricePerDay} /> / jour · caution <Money n={c.deposit} /></p>
+                    <p className="text-sm muted"><b className="font-display text-brand-700 dark:text-brand-300"><Money n={c.pricePerDay} /></b> / jour · caution <Money n={c.deposit} /></p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
                   <select
-                    className={`min-h-[42px] min-w-0 flex-1 rounded-2xl border px-3 text-sm font-semibold ${c.status === 'available' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : c.status === 'rented' ? 'border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300' : 'border-slate-400/40 bg-slate-500/10 text-slate-700 dark:text-slate-300'}`}
+                    className={`col-span-2 min-h-[44px] min-w-0 rounded-2xl sm:flex-1 border px-3 text-sm font-semibold ${STATUS_SEL[c.status]}`}
                     value={c.status}
                     aria-label={`Disponibilité de ${c.name}`}
                     onChange={(e) => void quickStatus(c, e.target.value as Car['status'])}
                   >
                     <option value="available">● Disponible</option><option value="rented">● Louée</option><option value="maintenance">● Réparation</option>
                   </select>
-                  <button className="btn !min-h-[42px] !px-3" onClick={() => setEdit({ ...c })}>Modifier</button>
-                  <button className="btn-danger !min-h-[42px] !px-3" onClick={() => void remove(c)} aria-label={`Retirer ${c.name}`}>Retirer</button>
+                  <button className="btn !min-h-[44px] !px-3" onClick={() => setEdit({ ...c })}>Modifier</button>
+                  <button className="btn-danger !min-h-[44px] !px-3" onClick={() => void remove(c)} aria-label={`Retirer ${c.name}`}>Retirer</button>
                 </div>
               </li>
             ))}
           </ul>
         </>
       )}
+      {!(tab === 'cars' && edit) && <Dock label="Menu propriétaire" active={tab} items={tabs.map((x) => ({ key: x.key, label: x.short, icon: x.dockIcon, onClick: () => go(x.key) }))} />}
     </div>
   );
 }
